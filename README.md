@@ -12,7 +12,7 @@ ogni vista c'e' la domanda a cui risponde; sotto ogni query c'e' cosa quella que
 | [`01_schema.sql`](01_schema.sql) | Le cinque tabelle, con il perche' di ogni scelta di modellazione |
 | [`02_viste.sql`](02_viste.sql) | Le nove viste, una per una, con la domanda di business sopra |
 | [`03_analisi.sql`](03_analisi.sql) | Sei query analitiche: funzioni finestra, CTE, self join |
-| [`04_qualita_dati.sql`](04_qualita_dati.sql) | Dieci controlli di qualita': sei passano, quattro trovano difetti veri |
+| [`04_qualita_dati.sql`](04_qualita_dati.sql) | Dieci controlli di qualita', eseguiti e non solo scritti |
 
 ---
 
@@ -120,42 +120,53 @@ un giocatore, per dire, segnala dove guardare, non conclude che sia un difetto.
 
 ---
 
-## Dati sporchi, dichiarati
+## Su quali dati e' stato verificato
 
-I dieci controlli in `04_qualita_dati.sql` sono stati **eseguiti**, non solo scritti. Sei
-passano e quattro no. Quei quattro segnalano **tre difetti veri**, e sono la parte piu' utile
-del repository: dicono cosa a questi dati non si puo' chiedere.
+Le query non sono solo scritte: sono state **eseguite** su dati reali, trasferendo lo schema in
+SQLite e caricandoci il contenuto dei dump `serie_a_25_26_*.sql` del motore — 20 squadre,
+554 giocatori, 280 partite, 8.772 righe giocatore-partita.
 
-**La colonna `giornata` non e' la giornata di campionato.** 280 partite distribuite su 21 valori
-distinti, con 16 partite nella "giornata 1" e 22 nella "7", e squadre che compaiono due volte
-nello stesso valore a una settimana di distanza. La fonte (Understat) espone le date, non il
-numero di giornata: questa colonna e' una derivazione che non tiene.
-*Conseguenza operativa:* ordinare per `data`, mai per `giornata`. La query 2 in `03_analisi.sql`
-— una media mobile, cioe' esattamente il tipo di query che l'ordinamento sbagliato rovina in
-silenzio — e' scritta cosi' per questo motivo.
+**Quei dump sono una fotografia del 16 marzo 2026, non il database corrente.** Si riconosce
+dallo schema: non hanno la colonna `season`, che il motore usa per separare le stagioni, ne' le
+colonne `npxg`, `npg`, `xg_chain`, `xg_buildup` aggiunte in seguito a `giocatore_partita`.
+Quindi lo schema in `01_schema.sql` e' quello di quella fotografia, ed e' un sottoinsieme di
+quello vivo.
 
-**184 righe hanno un giocatore in una partita della squadra sbagliata.** Sono i trasferimenti:
-l'anagrafica tiene una sola squadra per giocatore, quella attuale, mentre le partite restano
-attribuite a chi le ha giocate. Non e' un errore di importazione, e' il modello che non ha lo
-storico dei trasferimenti. Va saputo prima di aggregare per squadra.
+I dieci controlli in `04_qualita_dati.sql`, su quella fotografia, danno sei OK e quattro con
+righe. Ecco cosa vuol dire ciascuno, perche' non tutti sono difetti:
 
-**48 giocatori non hanno il ruolo.** E' il difetto peggiore dei tre, perche' non si manifesta:
-spariscono in silenzio da ogni query che filtra per ruolo, senza errori e senza comparire in
-nessun risultato.
+**La colonna `giornata` (controlli 7 e 7b).** In quel dump non e' la giornata di campionato:
+280 partite su 21 valori distinti, 16 partite nella "giornata 1", squadre che compaiono due
+volte nello stesso valore a una settimana di distanza. **Risolto a monte:** il motore deriva la
+giornata dall'invariante *una squadra gioca una sola partita per giornata*, in modo robusto a
+rinvii e recuperi, e la usa solo come filtro di presentazione, mai nel calcolo dell'indice. Il
+dump e' precedente a quel lavoro. Resta valida una regola pratica per chi scrive query su
+questi dati: **ordinare per `data`**, che e' sempre affidabile. La query 2 in `03_analisi.sql`
+e' scritta cosi' per questo.
 
-Nessuno di questi tre e' stato nascosto sistemando il controllo. Un controllo di qualita' che
-passa sempre e' un controllo che nessuno esegue.
+**184 righe con un giocatore in una partita della squadra sbagliata (controllo 4).** Sono i
+trasferimenti: l'anagrafica tiene una sola squadra per giocatore, quella corrente, mentre le
+partite restano attribuite a chi le ha giocate. Non e' un errore di importazione, e' il modello
+che non ha lo storico dei trasferimenti - un limite noto e non un guasto. Va saputo prima di
+aggregare per squadra.
+
+**48 giocatori senza `ruolo` (controllo 6).** Su quella fotografia. Non ho potuto verificare lo
+stato attuale: e' il tipo di difetto che non si manifesta, perche' quei giocatori spariscono in
+silenzio da ogni query che filtra per ruolo, senza errori e senza comparire nei risultati. Vale
+la pena rilanciare il controllo 6 sul database vivo.
+
+Il punto dei controlli non e' che passino, ma che vengano eseguiti: uno che dichiara di passare
+sempre e non gira mai vale meno di uno che gira e trova qualcosa da spiegare.
 
 ---
 
-## Verificato, non solo scritto
+## Un errore trovato eseguendo
 
-Tutte le query di questo repository sono state eseguite sui dati reali della stagione 2025/26 —
-20 squadre, 554 giocatori, 280 partite, 8.772 righe giocatore-partita — e non solo scritte.
-La verifica ha fatto emergere i tre difetti qui sopra e, nelle query 1 e 5, un errore mio:
-l'alias `minuti` in `HAVING` ha lo stesso nome della colonna `gp.minuti`, e quale dei due vince
-dipende dal motore: MySQL sceglie l'alias, SQLite la colonna, e la stessa query restituisce
-due risultati diversi. Adesso l'aggregato e' scritto per esteso e non e' ambiguo per nessuno dei due.
+Nelle query 1 e 5 la clausola era `HAVING minuti >= 450`, dove `minuti` e' un alias che si
+chiama come la colonna `gp.minuti`. Quale dei due vince dipende dal motore: MySQL sceglie
+l'alias, SQLite la colonna, e la stessa query restituisce due risultati diversi - in SQLite,
+zero righe. Adesso l'aggregato e' scritto per esteso e non e' ambiguo per nessuno dei due.
+Scrivendola e basta, non sarebbe saltata fuori.
 
 ---
 

@@ -6,7 +6,14 @@
 --  dimensione tempo (`calendario`): uno a grana squadra-partita, uno a grana
 --  giocatore-partita.
 --
---  Volumi reali del database da cui e' estratto:
+--  ATTENZIONE - da dove viene questo schema: e' trascritto dai dump
+--  `serie_a_25_26_*.sql` del motore, che sono una fotografia del 16 marzo 2026.
+--  Il database vivo e' andato avanti: ha almeno una colonna `season` sulle
+--  tabelle stagionali, e `npxg`, `npg`, `xg_chain`, `xg_buildup` aggiunte a
+--  `giocatore_partita`. Quello qui sotto e' quindi un sottoinsieme corretto ma
+--  non completo. Va riallineato quando si ha accesso al database corrente.
+--
+--  Volumi reali della fotografia da cui e' estratto:
 --    squadre                20 righe
 --    giocatori             554 righe
 --    calendario            280 righe   (una per partita)
