@@ -4,23 +4,26 @@
 --  Ogni query qui sotto dovrebbe restituire ZERO righe. Se ne restituisce, il
 --  dato e' rotto e le analisi in 03_analisi.sql sono sbagliate senza dirlo.
 --
---  ESITO DELL'ULTIMA ESECUZIONE, sulla stagione 2025/26 (280 partite, 8.772
---  righe giocatore-partita). Dieci controlli: sei passano, quattro no.
+--  ESITO DELL'ULTIMA ESECUZIONE. Attenzione a SU COSA: i dump
+--  `serie_a_25_26_*.sql` del motore, che sono una fotografia del 16 marzo 2026
+--  (280 partite, 8.772 righe giocatore-partita) e NON il database corrente -
+--  non hanno nemmeno la colonna `season`. Sei controlli passano, quattro no,
+--  e i quattro vanno letti sapendo su cosa hanno girato.
 --
 --    1  partite senza due squadre .................. 0 righe   OK
 --    2  lati non complementari ..................... 0 righe   OK
 --    3  goal incoerenti ............................ 0 righe   OK
---    4  giocatore in partita non della sua squadra 184 righe   ATTESO, vedi sotto
+--    4  giocatore in partita non della sua squadra 184 righe   limite noto del modello
 --    5  valori impossibili ......................... 0 righe   OK
---    6  giocatori senza ruolo ..................... 48 righe   DA SISTEMARE
+--    6  giocatori senza ruolo ..................... 48 righe   da riverificare sul vivo
 --    6b omonimi nella stessa squadra .............. 0 righe   OK
---    7  giornate non da dieci partite ............. 21 righe   DIFETTO NOTO
---    7b squadra due volte nella stessa giornata .. 164 righe   stesso difetto
+--    7  giornate non da dieci partite ............. 21 righe   gia' risolto a monte
+--    7b squadra due volte nella stessa giornata .. 164 righe   stesso, gia' risolto
 --    8  partite senza righe giocatore .............. 0 righe   OK
 --
---  I numeri stanno qui e non in un README perche' un controllo di qualita' che
---  dichiara di passare sempre, e non viene mai eseguito, e' peggio che non
---  averlo. Questi sono stati eseguiti, e quattro dicono di no.
+--  I numeri stanno qui perche' un controllo che dichiara di passare sempre, e
+--  non viene mai eseguito, vale meno di uno che gira e trova qualcosa da
+--  spiegare. Questi sono stati eseguiti.
 --
 --  Non sono controlli teorici: sono i modi in cui questo database si e' rotto
 --  davvero durante l'importazione da due fonti esterne. Righe orfane, omonimi e
@@ -172,7 +175,7 @@ WHERE gp.id IS NULL;
 
 
 -- =============================================================================
---  Cosa significano i quattro controlli che non passano
+--  Cosa significano i quattro controlli che restituiscono righe
 --
 --  4 - 184 righe. Sono trasferimenti. L'anagrafica tiene UNA squadra per
 --      giocatore, quella attuale, mentre le partite restano attribuite a chi le
@@ -181,18 +184,23 @@ WHERE gp.id IS NULL;
 --      ha lo storico dei trasferimenti. Va saputo prima di aggregare per
 --      squadra: i totali di squadra includono minuti giocati altrove.
 --
---  6 - 48 giocatori senza ruolo. Questi spariscono in silenzio da ogni query che
+--  6 - 48 giocatori senza ruolo, sulla fotografia di marzo; lo stato attuale
+--      non e' stato verificato. Questi spariscono in silenzio da ogni query che
 --      filtra per ruolo (la 5 in 03_analisi.sql lo fa): non danno errore, non
 --      compaiono nei risultati, e nessuno se ne accorge. E' il tipo di difetto
 --      peggiore, perche' non si manifesta.
 --
---  7 e 7b - la colonna `giornata` NON e' la giornata di campionato. Nei dati ci
---      sono 21 valori distinti per 280 partite, con 16 partite nella "giornata
---      1" e 22 nella "7", e squadre che compaiono due volte nello stesso valore
---      a una settimana di distanza. La fonte (Understat) espone le date, non il
---      numero di giornata, e questa colonna e' una derivazione che non tiene.
---      **Conseguenza operativa: ordinare per `data`, mai per `giornata`.**
---      La query 2 di 03_analisi.sql e' scritta cosi' proprio per questo.
+--  7 e 7b - GIA' RISOLTO A MONTE, e la riga qui sotto vale solo per la
+--      fotografia di marzo. In quel dump `giornata` non e' la giornata di
+--      campionato: 21 valori distinti per 280 partite, 16 partite nella
+--      "giornata 1", squadre che compaiono due volte nello stesso valore a una
+--      settimana di distanza. Understat espone le date, non il numero di
+--      giornata. Il motore lo ha poi risolto derivando la giornata
+--      dall'invariante "una squadra gioca una sola partita per giornata", in
+--      modo robusto a rinvii e recuperi, e usandola solo come filtro di
+--      presentazione, mai nel calcolo dell'indice.
+--      Resta comunque la regola pratica: **ordinare per `data`**, che non
+--      dipende da nessuna derivazione. La query 2 di 03_analisi.sql fa cosi'.
 --
 -- =============================================================================
 --  Un controllo che di proposito NON c'e':
