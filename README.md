@@ -4,15 +4,15 @@ Il livello dati dietro il [Football Scout Index](https://raffaeleciccone-analyst
 schema relazionale, le nove viste che alimentano le pagine, e le query analitiche che le viste
 non sanno rispondere.
 
-**Cosa c'e' qui dentro:** SQL leggibile e commentato, non un dump da importare e basta. Sopra
-ogni vista c'e' la domanda a cui risponde; sotto ogni query c'e' cosa quella query **non** dice.
+Sopra ogni vista c'e' la domanda a cui risponde; sotto ogni query c'e' cosa quella query
+**non** dice.
 
 | File | Cosa contiene |
 |---|---|
 | [`01_schema.sql`](01_schema.sql) | Le cinque tabelle, con il perche' di ogni scelta di modellazione |
 | [`02_viste.sql`](02_viste.sql) | Le nove viste, una per una, con la domanda di business sopra |
 | [`03_analisi.sql`](03_analisi.sql) | Sei query analitiche: funzioni finestra, CTE, self join |
-| [`04_qualita_dati.sql`](04_qualita_dati.sql) | Dieci controlli di qualita', eseguiti e non solo scritti |
+| [`04_qualita_dati.sql`](04_qualita_dati.sql) | Dieci controlli di qualita', con l'esito dell'ultima esecuzione |
 
 ---
 
@@ -155,8 +155,8 @@ stato attuale: e' il tipo di difetto che non si manifesta, perche' quei giocator
 silenzio da ogni query che filtra per ruolo, senza errori e senza comparire nei risultati. Vale
 la pena rilanciare il controllo 6 sul database vivo.
 
-Il punto dei controlli non e' che passino, ma che vengano eseguiti: uno che dichiara di passare
-sempre e non gira mai vale meno di uno che gira e trova qualcosa da spiegare.
+Un controllo che dichiara di passare sempre e non gira mai vale meno di uno che gira e trova
+qualcosa da spiegare.
 
 ---
 
