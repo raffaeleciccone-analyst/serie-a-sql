@@ -147,16 +147,13 @@ e' scritta cosi' per questo.
 **184 righe con un giocatore in una partita della squadra sbagliata (controllo 4).** Sono i
 trasferimenti: l'anagrafica tiene una sola squadra per giocatore, quella corrente, mentre le
 partite restano attribuite a chi le ha giocate. Non e' un errore di importazione, e' il modello
-che non ha lo storico dei trasferimenti - un limite noto e non un guasto. Va saputo prima di
-aggregare per squadra.
+che non ha lo storico dei trasferimenti: un limite noto, da sapere prima di aggregare per
+squadra.
 
 **48 giocatori senza `ruolo` (controllo 6).** Su quella fotografia. Non ho potuto verificare lo
 stato attuale: e' il tipo di difetto che non si manifesta, perche' quei giocatori spariscono in
-silenzio da ogni query che filtra per ruolo, senza errori e senza comparire nei risultati. Vale
-la pena rilanciare il controllo 6 sul database vivo.
-
-Un controllo che dichiara di passare sempre e non gira mai vale meno di uno che gira e trova
-qualcosa da spiegare.
+silenzio da ogni query che filtra per ruolo, senza errori e senza comparire nei risultati,
+per cui vale la pena rilanciare il controllo 6 sul database vivo.
 
 ---
 
@@ -165,8 +162,8 @@ qualcosa da spiegare.
 Nelle query 1 e 5 la clausola era `HAVING minuti >= 450`, dove `minuti` e' un alias che si
 chiama come la colonna `gp.minuti`. Quale dei due vince dipende dal motore: MySQL sceglie
 l'alias, SQLite la colonna, e la stessa query restituisce due risultati diversi - in SQLite,
-zero righe. Adesso l'aggregato e' scritto per esteso e non e' ambiguo per nessuno dei due.
-Scrivendola e basta, non sarebbe saltata fuori.
+zero righe. Adesso l'aggregato e' scritto per esteso e non e' ambiguo per nessuno dei due: e' il tipo di
+differenza che salta fuori eseguendo, e scrivendo la query e basta no.
 
 ---
 
@@ -197,6 +194,11 @@ insieme alla suite di validazione.
 
 Le quindici verifiche statistiche, comprese le tre che l'indice non supera, sono pubblicate
 [qui](https://raffaeleciccone-analyst.github.io/serie-a-index/validazione.html).
+
+**Il progetto e' stato costruito con l'aiuto di un assistente IA.** La domanda sopra ogni
+vista e la riga "NON dice" sotto ogni query non sono decorazione: sono il motivo per cui ogni
+scelta di modellazione e ogni limite dei dati si possono difendere uno per uno. Una scelta
+che non si sa spiegare non serve a niente.
 
 Fonti dei dati: xG e xA da [Understat](https://understat.com), anagrafica e valori da
 Transfermarkt, agganciati per identificativo e non per nome. I nomi delle colonne sono in
