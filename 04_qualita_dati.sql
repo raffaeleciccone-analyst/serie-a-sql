@@ -21,9 +21,8 @@
 --    7b squadra due volte nella stessa giornata .. 164 righe   stesso, gia' risolto
 --    8  partite senza righe giocatore .............. 0 righe   OK
 --
---  I numeri stanno qui perche' un controllo che dichiara di passare sempre, e
---  non viene mai eseguito, vale meno di uno che gira e trova qualcosa da
---  spiegare. Questi sono stati eseguiti.
+--  I numeri stanno qui perche' questi controlli sono stati eseguiti davvero,
+--  e non solo scritti.
 --
 --  Non sono controlli teorici: sono i modi in cui questo database si e' rotto
 --  davvero durante l'importazione da due fonti esterne. Righe orfane, omonimi e
