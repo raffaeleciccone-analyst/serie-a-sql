@@ -89,7 +89,7 @@ domande di questo database sono *per squadra* e non *per partita*: con la UNION 
 costerebbe due scansioni, e la classifica e' la query piu' eseguita che esista.
 
 **`punti` e `risultato` sono materializzati** anche se derivabili dai goal. La regola dei tre
-punti e' una convenzione, non un fatto: tenerla in un solo posto — la procedura di caricamento —
+punti e' una convenzione, non un fatto: tenerla in un solo posto (la procedura di caricamento)
 evita che venga riscritta in ogni query, con il rischio che una la scriva diversa.
 
 **Un giocatore non convocato non ha una riga.** Non e' una dimenticanza: *zero minuti* e *non
@@ -101,7 +101,7 @@ presenze, non le giornate.
 
 ## Le domande
 
-Le nove viste rispondono a domande descrittive — chi ha segnato, come e' finita, chi sta davanti.
+Le nove viste rispondono a domande descrittive: chi ha segnato, come e' finita, chi sta davanti.
 Le sei query in `03_analisi.sql` provano a rispondere a domande su cui **qualcuno deve poi
 decidere qualcosa**:
 
@@ -123,7 +123,7 @@ un giocatore, per dire, segnala dove guardare, non conclude che sia un difetto.
 ## Su quali dati e' stato verificato
 
 Le query non sono solo scritte: sono state **eseguite** su dati reali, trasferendo lo schema in
-SQLite e caricandoci il contenuto dei dump `serie_a_25_26_*.sql` del motore — 20 squadre,
+SQLite e caricandoci il contenuto dei dump `serie_a_25_26_*.sql` del motore: 20 squadre,
 554 giocatori, 280 partite, 8.772 righe giocatore-partita.
 
 **Quei dump sono una fotografia del 16 marzo 2026, non il database corrente.** Si riconosce
@@ -195,7 +195,7 @@ composito sta nel motore, in
 [`serie-a-index-engine`](https://github.com/raffaeleciccone-analyst/serie-a-index-engine),
 insieme alla suite di validazione.
 
-Le quindici verifiche statistiche — comprese le tre che l'indice non supera — sono pubblicate
+Le quindici verifiche statistiche, comprese le tre che l'indice non supera, sono pubblicate
 [qui](https://raffaeleciccone-analyst.github.io/serie-a-index/validazione.html).
 
 Fonti dei dati: xG e xA da [Understat](https://understat.com), anagrafica e valori da
