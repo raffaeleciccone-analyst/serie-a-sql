@@ -6,14 +6,14 @@
 --  dimensione tempo (`calendario`): uno a grana squadra-partita, uno a grana
 --  giocatore-partita.
 --
---  ATTENZIONE - da dove viene questo schema: e' trascritto dai dump
+--  ATTENZIONE - da dove viene questo schema: è trascritto dai dump
 --  `serie_a_25_26_*.sql` del motore, che sono una fotografia del 16 marzo 2026.
---  Il database vivo e' andato avanti: ha almeno una colonna `season` sulle
+--  Il database vivo è andato avanti: ha almeno una colonna `season` sulle
 --  tabelle stagionali, e `npxg`, `npg`, `xg_chain`, `xg_buildup` aggiunte a
---  `giocatore_partita`. Quello qui sotto e' quindi un sottoinsieme corretto ma
+--  `giocatore_partita`. Quello qui sotto è quindi un sottoinsieme corretto ma
 --  non completo. Va riallineato quando si ha accesso al database corrente.
 --
---  Volumi reali della fotografia da cui e' estratto:
+--  Volumi reali della fotografia da cui è estratto:
 --    squadre                20 righe
 --    giocatori             554 righe
 --    calendario            280 righe   (una per partita)
@@ -38,7 +38,7 @@ CREATE TABLE `squadre` (
   `id`    int NOT NULL AUTO_INCREMENT,
   `nome`  varchar(100) NOT NULL,
   PRIMARY KEY (`id`),
-  -- il nome e' unico: e' la chiave naturale usata per riconciliare le due fonti
+  -- il nome è unico: è la chiave naturale usata per riconciliare le due fonti
   -- esterne (Understat per gli xG, Transfermarkt per l'anagrafica)
   UNIQUE KEY `nome` (`nome`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -46,8 +46,8 @@ CREATE TABLE `squadre` (
 
 -- -----------------------------------------------------------------------------
 --  DIMENSIONE: giocatori
---  Il ruolo e' un ENUM e non una tabella a parte: quattro valori chiusi che non
---  cambiano mai. Una lookup table qui sarebbe un join in piu' senza un guadagno.
+--  Il ruolo è un ENUM e non una tabella a parte: quattro valori chiusi che non
+--  cambiano mai. Una lookup table qui sarebbe un join in più senza un guadagno.
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS `giocatori`;
 CREATE TABLE `giocatori` (
@@ -65,13 +65,13 @@ CREATE TABLE `giocatori` (
 
 -- -----------------------------------------------------------------------------
 --  DIMENSIONE TEMPO: calendario
---  Una riga per partita. E' il perno dello schema: entrambe le tabelle dei fatti
+--  Una riga per partita. È il perno dello schema: entrambe le tabelle dei fatti
 --  ci si agganciano.
 --
---  `game_id_understat` e' UNIQUE di proposito: e' l'identificativo della fonte
---  esterna, e il vincolo e' l'unica cosa che impedisce di importare due volte la
+--  `game_id_understat` è UNIQUE di proposito: è l'identificativo della fonte
+--  esterna, e il vincolo è l'unica cosa che impedisce di importare due volte la
 --  stessa partita. Agganciare per identificativo invece che per data e nomi
---  squadra e' quello che rende l'importazione ripetibile.
+--  squadra è quello che rende l'importazione ripetibile.
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS `calendario`;
 CREATE TABLE `calendario` (
@@ -101,16 +101,16 @@ CREATE TABLE `calendario` (
 --
 --  Due righe per ogni partita, una per squadra. La stessa informazione si
 --  potrebbe ricavare da `calendario` con una UNION fra il lato casa e il lato
---  trasferta: e' denormalizzata di proposito, perche' meta' delle domande di
+--  trasferta: è denormalizzata di proposito, perché metà delle domande di
 --  questo database sono "per squadra" e non "per partita", e con la UNION ogni
 --  singola classifica costerebbe due scansioni.
 --
---  `punti` e `risultato` sono derivabili dai goal. Sono materializzati perche'
---  la regola dei tre punti e' una convenzione, non un fatto: tenerla in un solo
+--  `punti` e `risultato` sono derivabili dai goal. Sono materializzati perché
+--  la regola dei tre punti è una convenzione, non un fatto: tenerla in un solo
 --  punto (la procedura di caricamento) evita che venga riscritta in ogni query.
 --
---  La chiave primaria composta (squadra_id, calendario_id) e' anche il vincolo
---  di integrita' vero: rende impossibile registrare due volte la stessa squadra
+--  La chiave primaria composta (squadra_id, calendario_id) è anche il vincolo
+--  di integrità vero: rende impossibile registrare due volte la stessa squadra
 --  nella stessa partita.
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS `squadra_calendario`;
@@ -138,12 +138,12 @@ CREATE TABLE `squadra_calendario` (
 -- -----------------------------------------------------------------------------
 --  FATTO 2: giocatore_partita  (grana: giocatore x partita)
 --
---  La tabella su cui gira tutto il resto. `uq_gp` e' il vincolo che regge
+--  La tabella su cui gira tutto il resto. `uq_gp` è il vincolo che regge
 --  l'importazione: un giocatore compare al massimo una volta per partita, quindi
 --  rilanciare l'import non duplica nulla.
 --
---  Nota sulla grana: un giocatore che non e' sceso in campo NON ha una riga.
---  Non e' una svista - "zero minuti" e "non convocato" sono cose diverse, e
+--  Nota sulla grana: un giocatore che non è sceso in campo NON ha una riga.
+--  Non è una svista - "zero minuti" e "non convocato" sono cose diverse, e
 --  l'assenza di riga tiene distinte le due, mentre uno 0 le confonderebbe.
 --  Conseguenza pratica: `COUNT(gp.id)` conta le presenze, non le giornate.
 -- -----------------------------------------------------------------------------

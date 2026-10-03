@@ -1,8 +1,8 @@
 -- =============================================================================
---  Controlli di qualita' dei dati.
+--  Controlli di qualità dei dati.
 --
 --  Ogni query qui sotto dovrebbe restituire ZERO righe. Se ne restituisce, il
---  dato e' rotto e le analisi in 03_analisi.sql sono sbagliate senza dirlo.
+--  dato è rotto e le analisi in 03_analisi.sql sono sbagliate senza dirlo.
 --
 --  ESITO DELL'ULTIMA ESECUZIONE. Attenzione a SU COSA: i dump
 --  `serie_a_25_26_*.sql` del motore, che sono una fotografia del 16 marzo 2026
@@ -17,21 +17,21 @@
 --    5  valori impossibili ......................... 0 righe   OK
 --    6  giocatori senza ruolo ..................... 48 righe   da riverificare sul vivo
 --    6b omonimi nella stessa squadra .............. 0 righe   OK
---    7  giornate non da dieci partite ............. 21 righe   gia' risolto a monte
---    7b squadra due volte nella stessa giornata .. 164 righe   stesso, gia' risolto
+--    7  giornate non da dieci partite ............. 21 righe   già risolto a monte
+--    7b squadra due volte nella stessa giornata .. 164 righe   stesso, già risolto
 --    8  partite senza righe giocatore .............. 0 righe   OK
 --
---  I numeri stanno qui perche' questi controlli sono stati eseguiti davvero,
+--  I numeri stanno qui perché questi controlli sono stati eseguiti davvero,
 --  e non solo scritti.
 --
---  Non sono controlli teorici: sono i modi in cui questo database si e' rotto
+--  Non sono controlli teorici: sono i modi in cui questo database si è rotto
 --  davvero durante l'importazione da due fonti esterne. Righe orfane, omonimi e
 --  record doppi hanno tutti richiesto uno script di riparazione dedicato.
 --
---  Il principio: quello che il database puo' impedire, lo impedisce da solo con
+--  Il principio: quello che il database può impedire, lo impedisce da solo con
 --  un vincolo (vedi `uq_gp` e la chiave composta in 01_schema.sql). Quello che
---  non e' esprimibile come vincolo diventa un controllo qui, da lanciare dopo
---  ogni caricamento. Un controllo che nessuno esegue non e' un controllo.
+--  non è esprimibile come vincolo diventa un controllo qui, da lanciare dopo
+--  ogni caricamento. Un controllo che nessuno esegue non è un controllo.
 -- =============================================================================
 
 SET NAMES utf8mb4;
@@ -39,7 +39,7 @@ SET NAMES utf8mb4;
 
 -- -----------------------------------------------------------------------------
 --  1. Ogni partita deve avere esattamente due righe in squadra_calendario.
---     Una sola = importazione interrotta a meta'. Tre = doppione.
+--     Una sola = importazione interrotta a metà. Tre = doppione.
 -- -----------------------------------------------------------------------------
 SELECT 'partite senza due squadre' AS controllo,
        c.id AS calendario_id, c.giornata, COUNT(sk.squadra_id) AS righe_trovate
@@ -51,7 +51,7 @@ HAVING righe_trovate <> 2;
 
 -- -----------------------------------------------------------------------------
 --  2. Le due righe di una partita devono essere una 'casa' e una 'trasferta'.
---     Due 'casa' significa che il lato e' stato assegnato male: le classifiche
+--     Due 'casa' significa che il lato è stato assegnato male: le classifiche
 --     casa/trasferta diventerebbero sbagliate senza che nulla lo segnali.
 -- -----------------------------------------------------------------------------
 SELECT 'lati non complementari' AS controllo,
@@ -66,7 +66,7 @@ HAVING righe_casa <> 1 OR righe_trasferta <> 1;
 -- -----------------------------------------------------------------------------
 --  3. I goal della squadra devono coincidere con quelli in calendario.
 --     Sono due registrazioni dello stesso fatto, arrivate per strade diverse:
---     se divergono, una delle due importazioni e' andata storta.
+--     se divergono, una delle due importazioni è andata storta.
 -- -----------------------------------------------------------------------------
 SELECT 'goal incoerenti fra calendario e squadra' AS controllo,
        c.id AS calendario_id, c.giornata,
@@ -80,14 +80,14 @@ HAVING gf_casa <> c.goal_casa OR gf_trasferta <> c.goal_trasferta;
 
 
 -- -----------------------------------------------------------------------------
---  4. Un giocatore non puo' comparire in una partita che la sua squadra non ha
---     giocato. E' il controllo che intercetta l'aggancio sbagliato fra le fonti:
+--  4. Un giocatore non può comparire in una partita che la sua squadra non ha
+--     giocato. È il controllo che intercetta l'aggancio sbagliato fra le fonti:
 --     un omonimo attribuito alla squadra sbagliata finisce esattamente qui.
 --
 --     Limite noto: il database non ha lo storico dei trasferimenti, quindi un
 --     giocatore ceduto a gennaio risulta legato alla squadra di arrivo anche per
 --     le partite giocate con quella di partenza. Questa query li segnalerebbe
---     come errori. E' un limite del modello, non un difetto del controllo, e va
+--     come errori. È un limite del modello, non un difetto del controllo, e va
 --     letto sapendolo.
 -- -----------------------------------------------------------------------------
 SELECT 'giocatore in una partita non della sua squadra' AS controllo,
@@ -103,8 +103,8 @@ WHERE g.squadra_id NOT IN (c.squadra_casa_id, c.squadra_trasferta_id);
 
 -- -----------------------------------------------------------------------------
 --  5. Valori fuori dal possibile.
---     Il tempo regolamentare piu' i recuperi non arriva a 120 minuti in una
---     partita di campionato; gli xG sono probabilita' sommate e non scendono
+--     Il tempo regolamentare più i recuperi non arriva a 120 minuti in una
+--     partita di campionato; gli xG sono probabilità sommate e non scendono
 --     sotto zero; nessuno prende due rossi.
 -- -----------------------------------------------------------------------------
 SELECT 'valori impossibili' AS controllo,
@@ -117,7 +117,7 @@ WHERE gp.minuti < 0 OR gp.minuti > 120
    OR gp.xg     < 0 OR gp.xa     < 0
    OR gp.rossi NOT IN (0, 1)
    OR gp.goal > gp.tiri;          -- non si segna senza tirare (autogol esclusi:
-                                  -- l'autogol e' attribuito all'altra squadra)
+                                  -- l'autogol è attribuito all'altra squadra)
 
 
 -- -----------------------------------------------------------------------------
@@ -142,8 +142,8 @@ HAVING occorrenze > 1;
 -- -----------------------------------------------------------------------------
 --  7. Copertura del campionato.
 --     A venti squadre ogni giornata ha dieci partite e ogni squadra ne gioca una
---     sola. Se salta, e' stata importata una partita di un'altra competizione o
---     una giornata e' incompleta.
+--     sola. Se salta, è stata importata una partita di un'altra competizione o
+--     una giornata è incompleta.
 -- -----------------------------------------------------------------------------
 SELECT 'giornate non da dieci partite' AS controllo,
        giornata, COUNT(*) AS partite
@@ -162,9 +162,9 @@ HAVING partite > 1;
 
 -- -----------------------------------------------------------------------------
 --  8. Partite senza nessun giocatore.
---     La partita esiste nel calendario ma il dettaglio giocatore-partita non e'
---     mai arrivato. Non rompe le classifiche di squadra - e' questo che la rende
---     insidiosa: tutto sembra a posto finche' non si guardano i marcatori.
+--     La partita esiste nel calendario ma il dettaglio giocatore-partita non è
+--     mai arrivato. Non rompe le classifiche di squadra - è questo che la rende
+--     insidiosa: tutto sembra a posto finché non si guardano i marcatori.
 -- -----------------------------------------------------------------------------
 SELECT 'partite senza righe giocatore' AS controllo,
        c.id AS calendario_id, c.giornata, c.data
@@ -178,19 +178,19 @@ WHERE gp.id IS NULL;
 --
 --  4 - 184 righe. Sono trasferimenti. L'anagrafica tiene UNA squadra per
 --      giocatore, quella attuale, mentre le partite restano attribuite a chi le
---      ha giocate: chi si e' mosso a gennaio risulta in partite della squadra
---      che ha lasciato. Non e' un errore di importazione, e' il modello che non
+--      ha giocate: chi si è mosso a gennaio risulta in partite della squadra
+--      che ha lasciato. Non è un errore di importazione, è il modello che non
 --      ha lo storico dei trasferimenti. Va saputo prima di aggregare per
 --      squadra: i totali di squadra includono minuti giocati altrove.
 --
 --  6 - 48 giocatori senza ruolo, sulla fotografia di marzo; lo stato attuale
---      non e' stato verificato. Questi spariscono in silenzio da ogni query che
+--      non è stato verificato. Questi spariscono in silenzio da ogni query che
 --      filtra per ruolo (la 5 in 03_analisi.sql lo fa): non danno errore, non
---      compaiono nei risultati, e nessuno se ne accorge. E' il tipo di difetto
---      peggiore, perche' non si manifesta.
+--      compaiono nei risultati, e nessuno se ne accorge. È il tipo di difetto
+--      peggiore, perché non si manifesta.
 --
---  7 e 7b - GIA' RISOLTO A MONTE, e la riga qui sotto vale solo per la
---      fotografia di marzo. In quel dump `giornata` non e' la giornata di
+--  7 e 7b - GIÀ RISOLTO A MONTE, e la riga qui sotto vale solo per la
+--      fotografia di marzo. In quel dump `giornata` non è la giornata di
 --      campionato: 21 valori distinti per 280 partite, 16 partite nella
 --      "giornata 1", squadre che compaiono due volte nello stesso valore a una
 --      settimana di distanza. Understat espone le date, non il numero di
@@ -199,14 +199,14 @@ WHERE gp.id IS NULL;
 --      modo robusto a rinvii e recuperi, e usandola solo come filtro di
 --      presentazione, mai nel calcolo dell'indice.
 --      Resta comunque la regola pratica: **ordinare per `data`**, che non
---      dipende da nessuna derivazione. La query 2 di 03_analisi.sql fa cosi'.
+--      dipende da nessuna derivazione. La query 2 di 03_analisi.sql fa così.
 --
 -- =============================================================================
---  Un controllo che di proposito NON c'e':
+--  Un controllo che di proposito NON c'è:
 --
 --  "la somma dei goal dei giocatori deve fare i goal della squadra".
---  Non torna quasi mai, e non e' un errore: gli autogol vengono conteggiati alla
+--  Non torna quasi mai, e non è un errore: gli autogol vengono conteggiati alla
 --  squadra ma non a un attaccante avversario. Metterlo qui produrrebbe righe a
 --  ogni esecuzione, e un controllo che segnala sempre viene ignorato sempre -
---  poi trascina con se' anche gli otto che funzionano.
+--  poi trascina con sé anche gli otto che funzionano.
 -- =============================================================================

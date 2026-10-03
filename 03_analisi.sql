@@ -1,13 +1,13 @@
 -- =============================================================================
 --  Sei domande che le viste non sanno rispondere.
 --
---  Le nove viste in 02_viste.sql descrivono: chi ha segnato, come e' finita, chi
+--  Le nove viste in 02_viste.sql descrivono: chi ha segnato, come è finita, chi
 --  sta davanti. Sono utili e le scriverebbe chiunque. Queste sei invece provano
 --  a rispondere a domande su cui qualcuno deve poi decidere qualcosa.
 --
---  Sotto ognuna c'e' una riga "NON dice": e' la parte che di solito manca, ed e'
+--  Sotto ognuna c'è una riga "NON dice": è la parte che di solito manca, ed è
 --  quella che separa un numero da una risposta. Un numero senza il suo limite
---  scritto accanto verra' usato per rispondere alla domanda sbagliata.
+--  scritto accanto verrà usato per rispondere alla domanda sbagliata.
 --
 --  MySQL 8.0 (servono le funzioni finestra e le CTE).
 -- =============================================================================
@@ -16,14 +16,14 @@ SET NAMES utf8mb4;
 
 
 -- -----------------------------------------------------------------------------
---  1. Chi sta segnando piu' di quanto dovrebbe, e quindi calera'?
+--  1. Chi sta segnando più di quanto dovrebbe, e quindi calerà?
 --
---  xG e' quanti goal ci si aspettava dai tiri tentati. La differenza fra goal
---  fatti e xG e' finalizzazione piu' fortuna, e la fortuna non si ripete.
---  Serve a due decisioni opposte: non comprare chi e' in cima a questa lista al
---  prezzo di adesso, e non svendere chi e' in fondo.
+--  xG è quanti goal ci si aspettava dai tiri tentati. La differenza fra goal
+--  fatti e xG è finalizzazione più fortuna, e la fortuna non si ripete.
+--  Serve a due decisioni opposte: non comprare chi è in cima a questa lista al
+--  prezzo di adesso, e non svendere chi è in fondo.
 --
---  La soglia sui minuti non e' cosmetica: su 200 minuti un +2.5 e' rumore.
+--  La soglia sui minuti non è cosmetica: su 200 minuti un +2.5 è rumore.
 -- -----------------------------------------------------------------------------
 SELECT
     CONCAT(g.nome, ' ', g.cognome)                             AS giocatore,
@@ -40,35 +40,35 @@ FROM giocatori g
 JOIN squadre sq           ON sq.id = g.squadra_id
 JOIN giocatore_partita gp ON gp.giocatore_id = g.id
 GROUP BY g.id, g.nome, g.cognome, sq.nome, g.ruolo
--- L'aggregato e' ripetuto per esteso invece di riusare l'alias `minuti`:
+-- L'aggregato è ripetuto per esteso invece di riusare l'alias `minuti`:
 --   l'alias ha lo stesso nome della colonna `gp.minuti`, e quale dei due vince
 --   in HAVING dipende dal motore. MySQL preferisce l'alias, SQLite la colonna,
 --   e la stessa query restituisce due risultati diversi. Verificato, non teorico.
 HAVING SUM(gp.minuti) >= 450   -- cinque partite intere: sotto, il dato non regge
-   AND SUM(gp.xg) > 0          -- chi non tira non e' un finalizzatore fortunato
+   AND SUM(gp.xg) > 0          -- chi non tira non è un finalizzatore fortunato
 ORDER BY scarto DESC
 LIMIT 20;
 
--- NON dice: chi ha finalizzato bene. Uno scarto positivo puo' venire da un
+-- NON dice: chi ha finalizzato bene. Uno scarto positivo può venire da un
 -- talento reale nel tiro o da un semestre fortunato, e questa query non le
--- distingue. Per farlo servono piu' stagioni dello stesso giocatore.
+-- distingue. Per farlo servono più stagioni dello stesso giocatore.
 
 
 -- -----------------------------------------------------------------------------
 --  2. Chi sta arrivando in forma, e chi sta scivolando?
 --
 --  La classifica somma tutta la stagione e quindi non vede il presente: una
---  squadra puo' essere sesta e avere perso le ultime cinque. Qui la media punti
+--  squadra può essere sesta e avere perso le ultime cinque. Qui la media punti
 --  su una finestra mobile di cinque partite, per ogni partita giocata.
 --
 --  Serve per la domanda su cui si scommette davvero: come arriva alla prossima.
 --
---  ATTENZIONE alla colonna d'ordinamento: la finestra e' ordinata per `c.data`
---  e NON per `c.giornata`. La colonna `giornata` in questo database non e' la
---  giornata di campionato ed e' inaffidabile (vedi il controllo 7 in
+--  ATTENZIONE alla colonna d'ordinamento: la finestra è ordinata per `c.data`
+--  e NON per `c.giornata`. La colonna `giornata` in questo database non è la
+--  giornata di campionato ed è inaffidabile (vedi il controllo 7 in
 --  04_qualita_dati.sql e la sezione "Dati sporchi" nel README): ordinare per
 --  giornata metterebbe le partite nella sequenza sbagliata, e una media mobile
---  su una sequenza sbagliata e' un numero peggiore di nessun numero.
+--  su una sequenza sbagliata è un numero peggiore di nessun numero.
 -- -----------------------------------------------------------------------------
 SELECT
     s.nome                                                     AS squadra,
@@ -89,7 +89,7 @@ JOIN squadre s    ON s.id = sk.squadra_id
 JOIN calendario c ON c.id = sk.calendario_id
 ORDER BY s.nome, c.data;
 
--- NON dice: se il calo e' la squadra o il calendario. Cinque partite contro le
+-- NON dice: se il calo è la squadra o il calendario. Cinque partite contro le
 -- prime sei producono la stessa curva di cinque brutte prestazioni. Per
 -- separarle serve pesare l'avversario (vedi la query 6).
 
@@ -98,11 +98,11 @@ ORDER BY s.nome, c.data;
 --  3. Quali squadre stanno sopra o sotto quello che il gioco dice?
 --
 --  Due classifiche: quella dei punti e quella degli xG prodotti. Il confronto
---  fra le due posizioni e' il segnale piu' onesto su chi sta correndo con il
+--  fra le due posizioni è il segnale più onesto su chi sta correndo con il
 --  vento a favore.
 --
 --  Un divario grande e positivo (posizione reale molto migliore di quella xG)
---  storicamente rientra. E' l'indicatore su cui un direttore sportivo decide se
+--  storicamente rientra. È l'indicatore su cui un direttore sportivo decide se
 --  la squadra va rinforzata o se sta solo avendo una buona annata.
 -- -----------------------------------------------------------------------------
 WITH per_squadra AS (
@@ -142,19 +142,19 @@ FROM posizioni
 ORDER BY scarto_posizioni DESC;
 
 -- NON dice: che la posizione attesa sia quella "giusta". Gli xG misurano la
--- qualita' dei tiri, non la capacita' di difendere un vantaggio, di segnare su
+-- qualità dei tiri, non la capacità di difendere un vantaggio, di segnare su
 -- palla inattiva o di avere un portiere migliore degli altri. Alcune squadre
--- stanno sopra i propri xG ogni anno, e non e' fortuna.
+-- stanno sopra i propri xG ogni anno, e non è fortuna.
 
 
 -- -----------------------------------------------------------------------------
 --  4. Quanto dipende una squadra da un solo giocatore?
 --
 --  La quota di xG di squadra prodotta dal suo miglior produttore. Sopra una
---  certa soglia non e' un punto di forza, e' un rischio: un infortunio e
+--  certa soglia non è un punto di forza, è un rischio: un infortunio e
 --  l'attacco si spegne.
 --
---  Il pezzo di SQL che conta e' la funzione finestra SUM() OVER (PARTITION BY
+--  Il pezzo di SQL che conta è la funzione finestra SUM() OVER (PARTITION BY
 --  squadra) accanto a un GROUP BY per giocatore: mette sulla stessa riga il
 --  totale del giocatore e il totale della sua squadra, che altrimenti sono due
 --  livelli di aggregazione diversi e richiederebbero una subquery correlata.
@@ -191,19 +191,19 @@ WHERE posizione = 1
 ORDER BY quota_pct DESC;
 
 -- NON dice: che la dipendenza sia un difetto. Una squadra costruita attorno a un
--- fuoriclasse ha una quota alta per scelta, non per poverta' di alternative. Il
+-- fuoriclasse ha una quota alta per scelta, non per povertà di alternative. Il
 -- numero segnala dove guardare, non cosa concludere.
 
 
 -- -----------------------------------------------------------------------------
---  5. Chi rende di piu' quando gioca, al netto di quanto gioca?
+--  5. Chi rende di più quando gioca, al netto di quanto gioca?
 --
---  I totali premiano chi e' sempre in campo. Normalizzando per 90 minuti si
---  vedono le riserve che producono quanto i titolari - che e' esattamente la
+--  I totali premiano chi è sempre in campo. Normalizzando per 90 minuti si
+--  vedono le riserve che producono quanto i titolari - che è esattamente la
 --  domanda di chi cerca un rinforzo che costi poco.
 --
---  La soglia HAVING e' l'unica difesa contro il caso limite: un goal in dieci
---  minuti fa 9.0 per 90, ed e' un numero senza significato.
+--  La soglia HAVING è l'unica difesa contro il caso limite: un goal in dieci
+--  minuti fa 9.0 per 90, ed è un numero senza significato.
 -- -----------------------------------------------------------------------------
 SELECT
     CONCAT(g.nome, ' ', g.cognome)                             AS giocatore,
@@ -220,28 +220,28 @@ SELECT
 FROM giocatori g
 JOIN squadre sq           ON sq.id = g.squadra_id
 JOIN giocatore_partita gp ON gp.giocatore_id = g.id
-WHERE g.ruolo IN ('CEN','ATT')     -- il criterio e' offensivo: sui difensori direbbe altro
+WHERE g.ruolo IN ('CEN','ATT')     -- il criterio è offensivo: sui difensori direbbe altro
 GROUP BY g.id, g.nome, g.cognome, sq.nome, g.ruolo
 HAVING SUM(gp.minuti) >= 450   -- stesso motivo della query 1: aggregato esplicito
 ORDER BY contributi_per_90 DESC
 LIMIT 25;
 
--- NON dice: che chi e' in cima renderebbe uguale da titolare. Entrare al 70' con
+-- NON dice: che chi è in cima renderebbe uguale da titolare. Entrare al 70' con
 -- la partita aperta e giocarla dal primo minuto sono due lavori diversi, e i
--- minuti da subentrante sono sistematicamente piu' produttivi.
+-- minuti da subentrante sono sistematicamente più produttivi.
 
 
 -- -----------------------------------------------------------------------------
 --  6. Contro chi ha giocato, davvero, ogni squadra?
 --
---  La difficolta' del calendario affrontato finora: la media dei punti per
+--  La difficoltà del calendario affrontato finora: la media dei punti per
 --  partita degli avversari incontrati. Serve a leggere tutte le query
---  precedenti: una media punti bassa contro un calendario duro non e' un calo.
+--  precedenti: una media punti bassa contro un calendario duro non è un calo.
 --
---  Il pezzo interessante e' che "gli avversari di una squadra" non e' una
+--  Il pezzo interessante è che "gli avversari di una squadra" non è una
 --  relazione che esiste nel database. Va costruita facendo incontrare
---  `squadra_calendario` con se' stessa sulla stessa partita, tenendo le righe in
---  cui la squadra e' diversa: un self join, che qui e' l'unico modo di
+--  `squadra_calendario` con sé stessa sulla stessa partita, tenendo le righe in
+--  cui la squadra è diversa: un self join, che qui è l'unico modo di
 --  esprimere "l'altro".
 -- -----------------------------------------------------------------------------
 WITH forza_squadra AS (
@@ -268,7 +268,7 @@ JOIN forza_squadra f  ON f.squadra_id = avv.squadra_id
 GROUP BY s.id, s.nome
 ORDER BY forza_media_avversari DESC;
 
--- NON dice: quanto sara' duro il calendario che resta. E c'e' una circolarita'
--- da tenere presente: la forza degli avversari e' calcolata sui punti di tutta
+-- NON dice: quanto sarà duro il calendario che resta. E c'è una circolarità
+-- da tenere presente: la forza degli avversari è calcolata sui punti di tutta
 -- la stagione, che includono le partite giocate contro di te. A venti squadre
--- l'effetto e' piccolo, ma non e' zero, e va detto invece che nascosto.
+-- l'effetto è piccolo, ma non è zero, e va detto invece che nascosto.

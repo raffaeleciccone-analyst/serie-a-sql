@@ -1,13 +1,13 @@
 -- =============================================================================
 --  Le nove viste, una per una.
 --
---  Sopra ogni vista c'e' la domanda a cui risponde. Se una vista non risponde a
---  una domanda che qualcuno fa davvero, non e' una vista: e' una query salvata
+--  Sopra ogni vista c'è la domanda a cui risponde. Se una vista non risponde a
+--  una domanda che qualcuno fa davvero, non è una vista: è una query salvata
 --  nel posto sbagliato.
 --
 --  Sono riscritte leggibili rispetto a come MySQL le restituisce da
 --  SHOW CREATE VIEW (che rimuove gli a capo e mette i backtick ovunque).
---  La logica e' identica.
+--  La logica è identica.
 -- =============================================================================
 
 SET NAMES utf8mb4;
@@ -17,15 +17,15 @@ SET NAMES utf8mb4;
 --  v_classifica
 --  "Come sta andando il campionato?"
 --
---  La classifica vera. Il punto interessante e' l'aggregazione condizionale:
+--  La classifica vera. Il punto interessante è l'aggregazione condizionale:
 --  in MySQL `sk.risultato = 'vittoria'` vale 1 o 0, quindi SUM() sopra una
 --  condizione conta le occorrenze senza bisogno di tre query separate o di tre
 --  CASE WHEN. Un pivot fatto con l'aritmetica.
 --
 --  L'ordinamento a criteri multipli (punti, poi differenza reti, poi goal
---  fatti) e' il regolamento della Serie A, non una preferenza.
+--  fatti) è il regolamento della Serie A, non una preferenza.
 --
---  xG e' sommato accanto ai punti di proposito: mette una accanto all'altra la
+--  xG è sommato accanto ai punti di proposito: mette una accanto all'altra la
 --  classifica che conta e quella che il gioco suggerirebbe.
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW v_classifica AS
@@ -51,8 +51,8 @@ ORDER BY Pt DESC, DR DESC, GF DESC;
 --  "Quali squadre vivono del fattore campo?"
 --
 --  Stessa classifica, ma il filtro sta nella condizione di JOIN e non in una
---  WHERE. Su un INNER JOIN le due forme danno lo stesso risultato; qui e' scritto
---  cosi' perche' il filtro appartiene alla relazione (quali partite della squadra
+--  WHERE. Su un INNER JOIN le due forme danno lo stesso risultato; qui è scritto
+--  così perché il filtro appartiene alla relazione (quali partite della squadra
 --  guardo) e non al risultato (quali righe tengo).
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW v_classifica_casa AS
@@ -80,7 +80,7 @@ ORDER BY Pt DESC, GF DESC;
 --
 --  Il gemello della precedente. Le due lette insieme rispondono a una domanda
 --  che la classifica generale nasconde: una squadra da 40 punti fatti tutti in
---  casa e una da 40 punti divisi a meta' non sono la stessa squadra.
+--  casa e una da 40 punti divisi a metà non sono la stessa squadra.
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW v_classifica_trasferta AS
 SELECT
@@ -107,15 +107,15 @@ ORDER BY Pt DESC, GF DESC;
 --
 --  Oltre ai goal, due cose:
 --
---  - `contributi` = goal + assist, perche' per un attaccante esterno o un
+--  - `contributi` = goal + assist, perché per un attaccante esterno o un
 --    trequartista i soli goal sottostimano il contributo offensivo;
 --  - `min_per_goal` con NULLIF(sum(goal), 0): senza, chi non ha segnato dividerebbe
 --    per zero. NULLIF trasforma lo zero in NULL e la divisione restituisce NULL,
---    cioe' "non calcolabile" invece di un errore o di un numero inventato.
---    E' la differenza fra un dato mancante e un dato sbagliato.
+--    cioè "non calcolabile" invece di un errore o di un numero inventato.
+--    È la differenza fra un dato mancante e un dato sbagliato.
 --
---  xG e xA accanto a goal e assist servono a leggere la sostenibilita': chi ha
---  8 goal su 3.0 di xG sta finendo sopra le sue possibilita', e prima o poi
+--  xG e xA accanto a goal e assist servono a leggere la sostenibilità: chi ha
+--  8 goal su 3.0 di xG sta finendo sopra le sue possibilità, e prima o poi
 --  rientra. Vedi anche la query 1 in 03_analisi.sql.
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW v_marcatori AS
@@ -142,9 +142,9 @@ ORDER BY goal DESC;
 --  v_assistman
 --  "Chi crea le occasioni per gli altri?"
 --
---  Deliberatamente piu' povera di v_marcatori: gli assist accanto agli xA, e
---  basta. xA e' la misura piu' onesta della creazione, perche' non dipende da
---  quanto e' bravo a segnare il compagno che riceve il passaggio.
+--  Deliberatamente più povera di v_marcatori: gli assist accanto agli xA, e
+--  basta. xA è la misura più onesta della creazione, perché non dipende da
+--  quanto è bravo a segnare il compagno che riceve il passaggio.
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW v_assistman AS
 SELECT
@@ -163,14 +163,14 @@ ORDER BY assist DESC;
 
 -- -----------------------------------------------------------------------------
 --  v_xg_giocatori
---  "Quanto pericolo produce un giocatore, e con che continuita'?"
+--  "Quanto pericolo produce un giocatore, e con che continuità?"
 --
 --  Il totale e la media stanno una accanto all'altra apposta: `xg_totale` premia
---  chi gioca tanto, `xg_media` (per partita) premia chi rende quando c'e'.
+--  chi gioca tanto, `xg_media` (per partita) premia chi rende quando c'è.
 --  Guardarne uno solo dei due porta a due classifiche diverse ed entrambe zoppe.
 --
 --  Attenzione al GROUP BY: include `gp.ruolo` (casa/trasferta), quindi un
---  giocatore compare in DUE righe, una per contesto. Non e' un errore, e' la
+--  giocatore compare in DUE righe, una per contesto. Non è un errore, è la
 --  grana della vista - ma va saputo prima di sommare questa vista per squadra.
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW v_xg_giocatori AS
@@ -195,11 +195,11 @@ ORDER BY xg_totale DESC;
 
 -- -----------------------------------------------------------------------------
 --  v_xg_squadra
---  "Una squadra crea e concede di piu' in casa o fuori?"
+--  "Una squadra crea e concede di più in casa o fuori?"
 --
 --  Aggregazione a due livelli: squadra e contesto. `xg_subiti` accanto a `xg`
---  e' la parte che si dimentica quasi sempre - una squadra che crea 1.8 xG a
---  partita concedendone 1.7 non e' una squadra offensiva, e' una squadra aperta.
+--  è la parte che si dimentica quasi sempre - una squadra che crea 1.8 xG a
+--  partita concedendone 1.7 non è una squadra offensiva, è una squadra aperta.
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW v_xg_squadra AS
 SELECT
@@ -221,13 +221,13 @@ ORDER BY xg_totale DESC;
 
 -- -----------------------------------------------------------------------------
 --  v_partite
---  "Il tabellone: chi ha giocato contro chi, e com'e' finita."
+--  "Il tabellone: chi ha giocato contro chi, e com'è finita."
 --
---  Il doppio JOIN sulla stessa tabella `squadre` e' il punto: `calendario` ha due
+--  Il doppio JOIN sulla stessa tabella `squadre` è il punto: `calendario` ha due
 --  chiavi esterne verso squadre, quindi va unita due volte con due alias diversi
---  (sc = casa, st = trasferta). Senza alias distinti la query non e' scrivibile.
+--  (sc = casa, st = trasferta). Senza alias distinti la query non è scrivibile.
 --
---  Il CASE traduce il punteggio nella notazione 1/X/2, che e' come i risultati
+--  Il CASE traduce il punteggio nella notazione 1/X/2, che è come i risultati
 --  vengono letti da chi guarda il calcio.
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW v_partite AS
@@ -254,19 +254,19 @@ JOIN squadre st ON st.id = c.squadra_trasferta_id;
 --  v_partite_squadra
 --  "Il cammino di una squadra, partita per partita."
 --
---  La vista piu' costosa delle nove: quattro JOIN, di cui tre sulla stessa
---  tabella `squadre` con alias diversi. Serve perche' "l'avversario" non e' una
---  colonna del database - e' l'altra squadra della partita, e va ricavata.
+--  La vista più costosa delle nove: quattro JOIN, di cui tre sulla stessa
+--  tabella `squadre` con alias diversi. Serve perché "l'avversario" non è una
+--  colonna del database - è l'altra squadra della partita, e va ricavata.
 --
 --  Il CASE su `sk.ruolo` sceglie quale dei due nomi mettere in colonna
---  `avversario`: se sto guardando la riga della squadra di casa, l'avversario e'
---  quella in trasferta, e viceversa. E' il pezzo che trasforma una tabella
+--  `avversario`: se sto guardando la riga della squadra di casa, l'avversario è
+--  quella in trasferta, e viceversa. È il pezzo che trasforma una tabella
 --  orientata alla partita in una orientata alla squadra.
 --
 --  Due colonne che sembrano doppie e non lo sono:
---    `risultato` = com'e' finita la partita (1/X/2, punto di vista neutro)
---    `esito`     = com'e' finita PER QUESTA squadra (vittoria/pareggio/sconfitta)
---  Un '2' e' una vittoria o una sconfitta a seconda di chi guarda.
+--    `risultato` = com'è finita la partita (1/X/2, punto di vista neutro)
+--    `esito`     = com'è finita PER QUESTA squadra (vittoria/pareggio/sconfitta)
+--  Un '2' è una vittoria o una sconfitta a seconda di chi guarda.
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW v_partite_squadra AS
 SELECT
